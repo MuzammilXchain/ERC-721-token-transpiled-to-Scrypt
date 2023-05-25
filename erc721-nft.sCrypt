@@ -1,0 +1,143 @@
+struct MapKeyST0 {
+  PubKeyHash key0;
+  PubKeyHash key1;
+}
+
+struct MapKeyST1 {
+  PubKeyHash key0;
+  int key1;
+}
+
+contract ERC721 {
+  @state
+  private HashedMap<PubKeyHash, int> balances;
+
+  @state
+  private HashedMap<int, PubKeyHash> tokenOwners;
+
+  @state
+  private HashedMap<int, bool> tokenExists;
+
+  @state
+  private HashedMap<MapKeyST0, int> allowed;
+
+  @state
+  private HashedMap<MapKeyST1, int> ownerTokens;
+
+  @state
+  HashedMap<int, bytes> tokenLinks;
+
+  static const int __LoopCount__0 = 1;
+
+  static const bytes tokenName = "My ERC721 Token";
+
+  static const bytes tokenSymbol = "MET";
+
+  static const int totalTokens = 1000000;
+
+  public function name(bytes retVal, SigHashPreimage txPreimage) {
+    require(tokenName == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function symbol(bytes retVal, SigHashPreimage txPreimage) {
+    require(tokenSymbol == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function totalSupply(int retVal, SigHashPreimage txPreimage) {
+    require(totalTokens == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function balanceOf(PubKeyHash _owner, int retVal, int balances__owner, int i0, SigHashPreimage txPreimage) {
+    require((!this.balances.has({_owner, i0}) && balances__owner == 0) || this.balances.canGet({_owner, i0}, balances__owner));
+    require(balances__owner == retVal);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function approve(PubKeyHash _to, int _tokenId, Sig sig, PubKey pubKey, int allowed_msgSender__to, int i2, bool tokenExists__tokenId, int i0, PubKeyHash tokenOwners__tokenId, int i1, SigHashPreimage txPreimage) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.tokenExists.has({_tokenId, i0}) && tokenExists__tokenId == false) || this.tokenExists.canGet({_tokenId, i0}, tokenExists__tokenId));
+    require(tokenExists__tokenId);
+    require((!this.tokenOwners.has({_tokenId, i1}) && tokenOwners__tokenId == Ripemd160(b'0000000000000000000000000000000000000000')) || this.tokenOwners.canGet({_tokenId, i1}, tokenOwners__tokenId));
+    require(msgSender == tokenOwners__tokenId);
+    require(msgSender != _to);
+    require((!this.allowed.has({{msgSender, _to}, i2}) && allowed_msgSender__to == 0) || this.allowed.canGet({{msgSender, _to}, i2}, allowed_msgSender__to));
+    allowed_msgSender__to = _tokenId;
+    require(this.allowed.set({{msgSender, _to}, i2}, allowed_msgSender__to));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function takeOwnership(int _tokenId, Sig sig, PubKey pubKey, int allowed_oldOwner_newOwner, int i2, int balances_oldOwner, int i3, bool tokenExists__tokenId, int i0, PubKeyHash tokenOwners__tokenId, int i1, SigHashPreimage txPreimage) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    require((!this.tokenExists.has({_tokenId, i0}) && tokenExists__tokenId == false) || this.tokenExists.canGet({_tokenId, i0}, tokenExists__tokenId));
+    require(tokenExists__tokenId);
+    require((!this.tokenOwners.has({_tokenId, i1}) && tokenOwners__tokenId == Ripemd160(b'0000000000000000000000000000000000000000')) || this.tokenOwners.canGet({_tokenId, i1}, tokenOwners__tokenId));
+    PubKeyHash oldOwner = tokenOwners__tokenId;
+    PubKeyHash newOwner = msgSender;
+    require(newOwner != oldOwner);
+    require((!this.allowed.has({{oldOwner, newOwner}, i2}) && allowed_oldOwner_newOwner == 0) || this.allowed.canGet({{oldOwner, newOwner}, i2}, allowed_oldOwner_newOwner));
+    require(allowed_oldOwner_newOwner == _tokenId);
+    require((!this.balances.has({oldOwner, i3}) && balances_oldOwner == 0) || this.balances.canGet({oldOwner, i3}, balances_oldOwner));
+    balances_oldOwner -= 1;
+    tokenOwners__tokenId = newOwner;
+    balances_oldOwner += 1;
+    require(this.balances.set({oldOwner, i3}, balances_oldOwner));
+    require(this.tokenOwners.set({_tokenId, i1}, tokenOwners__tokenId));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function transfer(PubKeyHash _to, int _tokenId, Sig sig, PubKey pubKey, int balances_currentOwner, int i3, int balances_newOwner, int i4, int ownerTokens_currentOwner_i, int i2, bool tokenExists__tokenId, int i0, PubKeyHash tokenOwners__tokenId, int i1, SigHashPreimage txPreimage) {
+    PubKeyHash msgSender = hash160(pubKey);
+    require(checkSig(sig, pubKey));
+    PubKeyHash currentOwner = msgSender;
+    PubKeyHash newOwner = _to;
+    require((!this.tokenExists.has({_tokenId, i0}) && tokenExists__tokenId == false) || this.tokenExists.canGet({_tokenId, i0}, tokenExists__tokenId));
+    require(tokenExists__tokenId);
+    require((!this.tokenOwners.has({_tokenId, i1}) && tokenOwners__tokenId == Ripemd160(b'0000000000000000000000000000000000000000')) || this.tokenOwners.canGet({_tokenId, i1}, tokenOwners__tokenId));
+    require(currentOwner == tokenOwners__tokenId);
+    require(currentOwner != newOwner);
+    require(newOwner != Ripemd160(b'0000000000000000000000000000000000000000'));
+    int i = 0;
+    loop (__LoopCount__0) {
+      if (ownerTokens_currentOwner_i != _tokenId) {
+        ownerTokens_currentOwner_i = 0;
+        i++;
+      }
+    }
+    require((!this.balances.has({currentOwner, i3}) && balances_currentOwner == 0) || this.balances.canGet({currentOwner, i3}, balances_currentOwner));
+    balances_currentOwner -= 1;
+    tokenOwners__tokenId = newOwner;
+    require((!this.balances.has({newOwner, i4}) && balances_newOwner == 0) || this.balances.canGet({newOwner, i4}, balances_newOwner));
+    balances_newOwner += 1;
+    require(this.balances.set({currentOwner, i3}, balances_currentOwner));
+    require(this.balances.set({newOwner, i4}, balances_newOwner));
+    require(this.ownerTokens.set({{currentOwner, i}, i2}, ownerTokens_currentOwner_i));
+    require(this.tokenOwners.set({_tokenId, i1}, tokenOwners__tokenId));
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function tokenOfOwnerByIndex(PubKeyHash _owner, int _index, int _tokenId, int ownerTokens__owner__index, int i0, SigHashPreimage txPreimage) {
+    int tokenId = 0;
+    require((!this.ownerTokens.has({{_owner, _index}, i0}) && ownerTokens__owner__index == 0) || this.ownerTokens.canGet({{_owner, _index}, i0}, ownerTokens__owner__index));
+    require(ownerTokens__owner__index == tokenId);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  public function tokenMetadata(int _tokenId, bytes _infoUrl, bytes tokenLinks__tokenId, int i0, SigHashPreimage txPreimage) {
+    bytes infoUrl = "";
+    require((!this.tokenLinks.has({_tokenId, i0}) && tokenLinks__tokenId == "") || this.tokenLinks.canGet({_tokenId, i0}, tokenLinks__tokenId));
+    require(tokenLinks__tokenId == infoUrl);
+    require(this.propagateState(txPreimage, SigHash.value(txPreimage)));
+  }
+
+  function propagateState(SigHashPreimage txPreimage, int value) : bool {
+    require(Tx.checkPreimage(txPreimage));
+    bytes outputScript = this.getStateScript();
+    bytes output = Utils.buildOutput(outputScript, value);
+    return hash256(output) == SigHash.hashOutputs(txPreimage);
+  }
+}
